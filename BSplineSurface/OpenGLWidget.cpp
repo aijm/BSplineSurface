@@ -61,7 +61,7 @@ OpenGLWidget::OpenGLWidget(QWidget* parent)
 	format.setProfile(QSurfaceFormat::CoreProfile);
 	format.setVersion(3, 3); //version 3.3
 	this->setFormat(format);
-	m_transform.translate(0.0f, 0.0f, -5.0f);
+	m_model.translate(0.0f, 0.0f, -5.0f);
 }
 
 void OpenGLWidget::initializeGL()
@@ -87,8 +87,9 @@ void OpenGLWidget::initializeGL()
 		m_program->bind();
 
 		// Cache Uniform Locations
-		u_modelToWorld = m_program->uniformLocation("modelToWorld");
-		u_worldToView = m_program->uniformLocation("worldToView");
+		u_model = m_program->uniformLocation("model");
+		u_view = m_program->uniformLocation("view");
+		u_projection = m_program->uniformLocation("projection");
 
 		// Create Buffer (Do not release until VAO is created)
 		m_vertex.create();
@@ -113,6 +114,7 @@ void OpenGLWidget::initializeGL()
 
 void OpenGLWidget::resizeGL(int width, int height)
 {
+	//glViewport(0, 0, width, height);
 	m_projection.setToIdentity();
 	m_projection.perspective(45.0f, width / float(height), 0.0f, 1000.0f);
 }
@@ -122,12 +124,14 @@ void OpenGLWidget::paintGL()
 	// Clear
 	glClear(GL_COLOR_BUFFER_BIT);
 
+
 	// Render using our shader
 	m_program->bind();
-	m_program->setUniformValue(u_worldToView, m_projection);
+	m_program->setUniformValue(u_model, m_model);
+	m_program->setUniformValue(u_view, m_view);
+	m_program->setUniformValue(u_projection, m_projection);
 	{
 		m_object.bind();
-		m_program->setUniformValue(u_modelToWorld, m_transform.toMatrix());
 		glDrawArrays(GL_TRIANGLES, 0, sizeof(sg_vertexes) / sizeof(sg_vertexes[0]));
 		m_object.release();
 	}
@@ -145,7 +149,7 @@ void OpenGLWidget::teardownGL()
 void OpenGLWidget::update()
 {
 	// Update instance information
-	m_transform.rotate(1.0f, QVector3D(0.4f, 0.3f, 0.3f));
+	m_model.rotate(1.0f, QVector3D(0.4f, 0.3f, 0.3f));
 
 	// Schedule a redraw
 	QOpenGLWidget::update();
