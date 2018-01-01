@@ -1,9 +1,18 @@
+#ifndef BSPLINESURFACE_H
+
+#define BSPLINESURFACE_H
+
+
+
+
 #include <vector>
 #include <QVector3D>
 using namespace std;
 
 class bspSurface
 {
+public:
+	bspSurface(){}
 	bspSurface(const vector<vector<QVector3D>>& cnPoint, const vector<float>& knots_u, vector<float>& knots_v)
 	{
 		m_cnPoint = cnPoint;
@@ -12,8 +21,8 @@ class bspSurface
 
 		m_nu = m_cnPoint.size() - 1;
 		m_nv = m_cnPoint[0].size() - 1;
-		m_ku = m_knots_u.size() - m_nu;
-		m_kv = m_knots_v.size() - m_nv;
+		m_ku = m_knots_u.size()-1 - m_nu;
+		m_kv = m_knots_v.size()-1 - m_nv;
 	}
 
 	bspSurface(const bspSurface& surface)
@@ -26,6 +35,7 @@ class bspSurface
 		m_nv = surface.m_nv;
 		m_ku = surface.m_ku;
 		m_kv = surface.m_kv;
+		
 	}
 
 	bspSurface& operator=(const bspSurface& surface)
@@ -38,6 +48,7 @@ class bspSurface
 		m_nv = surface.m_nv;
 		m_ku = surface.m_ku;
 		m_kv = surface.m_kv;
+		return *this;
 	}
 
 	QVector3D calPos(const float& u, const float& v)
@@ -54,7 +65,7 @@ class bspSurface
 	QVector3D calPos(const vector<QVector3D>& controlpoint, const vector<float>& knots, const float& t)
 	{
 		int n = controlpoint.size() - 1;
-		int k = knots.size() - knots.size();
+		int k = knots.size() - controlpoint.size();
 		int L = 0;
 		//计算t所处的区间[t_L,t_(L+1)]
 		for (int i = k - 1; i <= n + 1; ++i)
@@ -93,6 +104,92 @@ class bspSurface
 	}
 
 	//根据精度生成vbo,vao,ebo
+	void getbuffer_object(
+		vector<QVector3D>& vertices, vector<QVector3D>& normals,
+		vector<unsigned short>& edge_indices, vector<unsigned short>& face_indices,float step=0.1f)
+	{
+
+		int m = static_cast<int>((m_knots_u[m_nu + 1] - m_knots_u[m_ku - 1]) / step);
+		int n = static_cast<int>((m_knots_v[m_nv + 1] - m_knots_v[m_kv - 1]) / step);
+
+		for (int i = 0; i <= m; ++i)
+		{
+			for (int j = 0; j <= n; ++j)
+			{
+				float u = 0, v = 0;
+				if (i == m)
+				{
+					u = m_knots_u[m_nu + 1];
+					v = m_knots_v[m_kv - 1] + j*step;
+				}
+				else if (j == n)
+				{
+					u = m_knots_u[m_ku - 1] + i*step;
+					v = m_knots_v[m_nv + 1];
+				}
+				else
+				{
+					u = m_knots_u[m_ku - 1] + i*step;
+					v = m_knots_v[m_kv - 1] + j*step;
+				}
+				
+				QVector3D temp = calPos(u, v);
+				vertices.push_back(temp);
+			}
+		}
+		normals.resize(vertices.size());
+		for (int i = 0; i < m; ++i)
+		{
+			for (int j = 0; j < n; ++j)
+			{
+				QVector3D vector1 = vertices[i*(n + 1) + j + 1] - vertices[i*(n + 1) + j];
+				QVector3D vector2 = vertices[i*(n + 1) + j + (n + 1)] - vertices[i*(n + 1) + j];
+
+				normals[i*(n + 1) + j] = QVector3D::crossProduct(vector2, vector1);
+
+			}
+		}
+		for (int i = 0; i <= m; ++i)
+		{
+			normals[i*(n + 1) + n] = normals[i*(n + 1) + n - 1];
+		}
+		for (int j = 0; j <= n; ++j)
+		{
+			normals[m*(n + 1) + j] = normals[(m - 1)*(n + 1) + j];
+		}
+		
+		for (unsigned short i = 0; i < m; ++i)
+		{
+			for (unsigned short j = 0; j < n; ++j)
+			{
+				face_indices.push_back(i*(n + 1) + j);
+				face_indices.push_back(i*(n + 1) + j + 1);
+				face_indices.push_back(i*(n + 1) + j + (n + 1));
+				face_indices.push_back(i*(n + 1) + j + 1);
+				face_indices.push_back(i*(n + 1) + j + (n + 1));
+				face_indices.push_back(i*(n + 1) + j + (n + 1) + 1);
+
+				edge_indices.push_back(i*(n + 1) + j);
+				edge_indices.push_back(i*(n + 1) + j + 1);
+				edge_indices.push_back(i*(n + 1) + j);
+				edge_indices.push_back(i*(n + 1) + j + (n + 1));
+			
+			}
+		}
+
+		for (unsigned short i = 0; i < m; ++i)
+		{
+			edge_indices.push_back(i*(n + 1) + n);
+			edge_indices.push_back((i + 1)*(n + 1) + n);
+		}
+		for (unsigned short j = 0; j < n; ++j)
+		{
+			edge_indices.push_back(m*(n + 1) + j);
+			edge_indices.push_back(m*(n + 1) + j + 1);
+		}
+	}
+	
+
 
 
 private:
@@ -104,3 +201,6 @@ private:
 	vector<float> m_knots_u;//u向节点向量 u_0,...,u_(nu+ku)
 	vector<float> m_knots_v;//v向节点向量 v_0,...,v_(nv+kv)
 };
+
+
+#endif // !BSPLINESURFACE_H

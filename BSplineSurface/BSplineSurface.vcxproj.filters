@@ -86,9 +86,14 @@
     <ClInclude Include="BSplineSurface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="VirtualBall.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\simple.frag" />
     <None Include="shaders\simple.vert" />
+    <None Include="shaders\shader.frag" />
+    <None Include="shaders\shader.vert" />
   </ItemGroup>
 </Project>

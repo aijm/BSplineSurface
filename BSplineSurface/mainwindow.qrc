@@ -3,5 +3,7 @@
     <qresource prefix="/">
         <file>shaders/simple.frag</file>
         <file>shaders/simple.vert</file>
+        <file>shaders/shader.frag</file>
+        <file>shaders/shader.vert</file>
     </qresource>
 </RCC>
