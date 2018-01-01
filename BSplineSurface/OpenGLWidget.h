@@ -7,7 +7,6 @@
 #include <QOpenGLVertexArrayObject>
 #include <QMatrix4x4>
 
-class QExposeEvent;
 class QOpenGLShaderProgram;
 
 class OpenGLWidget : public QOpenGLWidget,

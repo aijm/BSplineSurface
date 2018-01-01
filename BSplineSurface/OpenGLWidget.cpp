@@ -158,20 +158,6 @@ void OpenGLWidget::update()
 	QOpenGLWidget::update();
 }
 
-//void OpenGLWidget::exposeEvent(QExposeEvent *ev)
-//{
-//	if (ev->region() != m_cachedRegion)
-//	{
-//		m_cachedRegion = ev->region();
-//		QOpenGLWidget::exposeEvent(ev);
-//	}
-//	else
-//	{
-//		ev->ignore();
-//	}
-//
-//}
-
 /*******************************************************************************
 * Private Helpers
 ******************************************************************************/
