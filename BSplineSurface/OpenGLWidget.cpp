@@ -48,6 +48,7 @@ GLuint indices1[] = {
 OpenGLWidget::OpenGLWidget(QWidget* parent)
 	:QOpenGLWidget(parent)
 {
+	//设置OpenGL版本
 	QSurfaceFormat format;
 	format.setRenderableType(QSurfaceFormat::OpenGL);
 	format.setProfile(QSurfaceFormat::CoreProfile);
@@ -69,7 +70,7 @@ void OpenGLWidget::initializeGL()
 	glEnable(GL_CULL_FACE);
 	glEnable(GL_DEPTH_TEST);
 	glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-
+	//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	// Application-specific initialization
 	{
 		// Create Shader (Do not release until VAO is created)
@@ -85,16 +86,16 @@ void OpenGLWidget::initializeGL()
 		u_projection = m_program->uniformLocation("u_Projection");
 		u_normal = m_program->uniformLocation("u_Normal");
 
-		QVector3D lightDirection = QVector3D(0.5f, 3.0f, 4.0f);
+		QVector3D lightDirection = QVector3D(0.0f,0.0f,-1.0f);
 		lightDirection.normalize();
-		m_program->setUniformValue("u_DiffuseLight", QVector3D(0.5f, 0.5f, 0.5f));
-		m_program->setUniformValue("u_LightDirection", lightDirection);
-		m_program->setUniformValue("u_AmbientLight", QVector3D(0.2f, 0.2f, 0.2f));
+		m_program->setUniformValue("u_DiffuseLight", QVector3D(0.8f, 0.8f, 0.8f)); //漫反射
+		m_program->setUniformValue("u_LightDirection", lightDirection); //光照方向
+		
 
 		
 			
 
-
+		//通过随机数生成随机控制网格
 		vector<vector<QVector3D>> controlpoint(6);
 		
 		for (int i = 0; i < 6; ++i)
@@ -105,95 +106,124 @@ void OpenGLWidget::initializeGL()
 				QTime time;
 				time = QTime::currentTime();
 				qsrand(time.msec() + time.second() * 1000);
-				float z = 1.0*(qrand() % 20 - 10) / 10.0;
-				cout << z << endl;
+				float z = 1.0*(qrand() % 20 - 10) / 20.0;
+				//cout << z << endl;
+				//z = 0.0;
 				controlpoint[i][j] = QVector3D(-1.0 + i*2.0 / 5, -1.0 + j*2.0 / 5, z);
 			}
 		}
 
-		vector<float> knots_u = { -0.02f, -0.01f, 0.0f, 0.25f, 0.5f, 0.75f, 1.0f, 1.01f, 1.02f };
-		vector<float> knots_v = { -0.03f, -0.02f, -0.01f, 0.0f, 0.33f, 0.66f, 1.0f, 1.01f, 1.02f, 1.03f };
 		
+		//节点向量，插值端点
+		vector<float> knots_u = { 0.0f, 0.0f, 0.0f, 0.25f, 0.5f, 0.75f, 1.0f, 1.0f, 1.0f };
+		vector<float> knots_v = { 0.0f, 0.0f, 0.0f, 0.0f, 0.33f, 0.66f, 1.0f, 1.0f, 1.0f, 1.0f };
+
 		bspsurf = bspSurface(controlpoint, knots_u, knots_v);
 
-		bspsurf.getbuffer_object(vertices, normals, edge_indices, face_indices,0.1f);
 
-		/*cout << "vertices size: " << vertices.size() << endl;
-		cout << "normals size: " << normals.size() << endl;
-		cout << "edge_indices size: " << edge_indices.size() << endl;
-		cout << "face_indices size: " << face_indices.size() << endl;*/
-
-		for (int i = 0; i < face_indices.size(); ++i)
+		
+		//vao_face //通过三角面片绘制
 		{
-			cout << face_indices[i] << endl;
+			bspsurf.getbuffer_object(vertices, normals, edge_indices, face_indices, 0.005f);
+			m_vao_face.create();
+			m_vao_face.bind();
+
+			m_vbo_vertices = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
+			m_vbo_normals = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
+			m_ebo_face = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
+			m_ebo_edge = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
+
+
+
+			// Create Buffer (Do not release until VAO is created)
+
+			m_vbo_vertices->create();
+			m_vbo_vertices->bind();
+			m_vbo_vertices->setUsagePattern(QOpenGLBuffer::StaticDraw);
+			m_vbo_vertices->allocate(&(vertices[0]), vertices.size() * sizeof(QVector3D));
+
+			m_program->setAttributeBuffer(0, GL_FLOAT, 0, 3, sizeof(QVector3D));
+			m_program->enableAttributeArray(0);
+
+
+			m_vbo_normals->create();
+			m_vbo_normals->bind();
+			m_vbo_normals->setUsagePattern(QOpenGLBuffer::StaticDraw);
+			m_vbo_normals->allocate(&(normals[0]), normals.size() * sizeof(QVector3D));
+
+			m_program->setAttributeBuffer(1, GL_FLOAT, 0, 3, sizeof(QVector3D));
+			m_program->enableAttributeArray(1);
+
+
+			m_ebo_face->create();
+			m_ebo_face->bind();
+			m_ebo_face->setUsagePattern(QOpenGLBuffer::StaticDraw);
+			m_ebo_face->allocate(&(face_indices[0]), face_indices.size() * sizeof(unsigned short));
+
+			m_vao_face.release();
+			m_ebo_face->release();
 		}
-
-		m_vao_face.create();
-		m_vao_face.bind();
 		
-		m_vbo_vertices = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
-		m_vbo_normals = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
-		m_ebo_face = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
-		m_ebo_edge = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
+		//vao_cube
+		{
+			m_cube_v = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
+			m_cube_n = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
+			ebo_cube = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
 
+			vao_cube.create();
+			vao_cube.bind();
 
-		// Create Buffer (Do not release until VAO is created)
+			m_cube_v->create();
+			m_cube_v->bind();
+			m_cube_v->allocate(vertices1, sizeof(vertices1));
+			m_program->setAttributeBuffer(0, GL_FLOAT, 0, 3, 3 * sizeof(GLfloat));
+			m_program->enableAttributeArray(0);
+
+			m_cube_n->create();
+			m_cube_n->bind();
+			m_cube_n->allocate(normals1, sizeof(normals1));
+			m_program->setAttributeBuffer(1, GL_FLOAT, 0, 3, 3 * sizeof(GLfloat));
+			m_program->enableAttributeArray(1);
+
+			ebo_cube->create();
+			ebo_cube->bind();
+			ebo_cube->allocate(indices1, sizeof(indices1));
+
+			vao_cube.release();
+			ebo_cube->release();
+		}
 		
-		m_vbo_vertices->create();
-		m_vbo_vertices->bind();
-		m_vbo_vertices->setUsagePattern(QOpenGLBuffer::StaticDraw);
-		m_vbo_vertices->allocate(&(vertices[0]), vertices.size()*sizeof(QVector3D));
+		//cn_vao_edge，控制网格
+		{
+			m_cn_vao_edge.create();
+			m_cn_vao_edge.bind();
 
-		m_program->setAttributeBuffer(0, GL_FLOAT, 0, 3, sizeof(QVector3D));
-		m_program->enableAttributeArray(0);
-		
+			m_cn_vbo_vertices = new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
+			
+			m_cn_ebo_edge = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
 
-		m_vbo_normals->create();
-		m_vbo_normals->bind();
-		m_vbo_normals->setUsagePattern(QOpenGLBuffer::StaticDraw);
-		m_vbo_normals->allocate(&(normals[0]), normals.size() * sizeof(QVector3D));
 
-		m_program->setAttributeBuffer(1, GL_FLOAT, 0, 3, sizeof(QVector3D));
-		m_program->enableAttributeArray(1);
-		
+			bspsurf.getcontrolpoint(cn_vertices, cn_edge_indices);
 
-		m_ebo_face->create();
-		m_ebo_face->bind();
-		m_ebo_face->setUsagePattern(QOpenGLBuffer::StaticDraw);
-		cout << sizeof(unsigned short) << endl;
-		cout << sizeof(face_indices) << endl;
-		cout << sizeof(int) << endl;
-		m_ebo_face->allocate(&(face_indices[0]), face_indices.size() * sizeof(unsigned short));
+			// Create Buffer (Do not release until VAO is created)
 
-		m_vao_face.release();
-		m_ebo_face->release();
+			m_cn_vbo_vertices->create();
+			m_cn_vbo_vertices->bind();
+			m_cn_vbo_vertices->setUsagePattern(QOpenGLBuffer::StaticDraw);
+			m_cn_vbo_vertices->allocate(&(cn_vertices[0]), cn_vertices.size() * sizeof(QVector3D));
 
-		/*m_cube_v=new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
-		m_cube_n=new QOpenGLBuffer(QOpenGLBuffer::VertexBuffer);
-		ebo_cube = new QOpenGLBuffer(QOpenGLBuffer::IndexBuffer);
-		
-		vao_cube.create();
-		vao_cube.bind();
+			m_program->setAttributeBuffer(0, GL_FLOAT, 0, 3, sizeof(QVector3D));
+			m_program->enableAttributeArray(0);
 
-		m_cube_v->create();
-		m_cube_v->bind();
-		m_cube_v->allocate(vertices1, sizeof(vertices1));
-		m_program->setAttributeBuffer(0, GL_FLOAT, 0, 3, 3 * sizeof(GLfloat));
-		m_program->enableAttributeArray(0);
+			m_cn_ebo_edge->create();
+			m_cn_ebo_edge->bind();
+			m_cn_ebo_edge->setUsagePattern(QOpenGLBuffer::StaticDraw);
+			
+			m_cn_ebo_edge->allocate(&(cn_edge_indices[0]), cn_edge_indices.size() * sizeof(unsigned short));
 
-		m_cube_n->create();
-		m_cube_n->bind();
-		m_cube_n->allocate(normals1, sizeof(normals1));
-		m_program->setAttributeBuffer(1, GL_FLOAT, 0, 3, 3 * sizeof(GLfloat));
-		m_program->enableAttributeArray(1);
-
-		ebo_cube->create();
-		ebo_cube->bind();
-		ebo_cube->allocate(indices1, sizeof(indices1));
-		
-		vao_cube.release();
-		ebo_cube->release();*/
-
+			m_cn_vao_edge.release();
+			m_cn_ebo_edge->release();
+		}
 
 
 		// Release (unbind) al
@@ -224,10 +254,9 @@ void OpenGLWidget::paintGL()
 	m_view.lookAt(QVector3D(1.0, 1.0, 3.0), QVector3D(0.0, 0.0, 0.0), QVector3D(0.0, 1.0, 0.0));
 	m_projection.perspective(fov, this->width() / (float)(this->height()), 1.0f, 1000.0f);
 
+	//模型变换后，法向变换对应的矩阵为模型矩阵 逆的转置
 	m_normalmatrix = m_model.inverted();
 	m_normalmatrix = m_normalmatrix.transposed();
-
-
 
 	// Render using our shader
 	m_program->bind();
@@ -236,15 +265,21 @@ void OpenGLWidget::paintGL()
 	m_program->setUniformValue(u_projection, m_projection);
 	m_program->setUniformValue(u_normal, m_normalmatrix);
 	{
+		//绘制B样条曲面
 		m_vao_face.bind();
-		//vao_cube.bind();
-		//glDrawArrays(GL_TRIANGLES, 0, sizeof(sg_vertexes) / sizeof(sg_vertexes[0]));
-		//glDrawArrays(GL_TRIANGLES, 0, sg_vertexes.size() / 2);
-	
+		m_program->setUniformValue("u_Color", QVector3D(1.0, 0.0, 0.0)); //曲面表面颜色
+		m_program->setUniformValue("u_AmbientLight", QVector3D(0.3f, 0.3f, 0.3f)); //环境光
+
 		glDrawElements(GL_TRIANGLES, face_indices.size(), GL_UNSIGNED_SHORT, 0);
-		//glDrawElements(GL_TRIANGLES, 12*3, GL_UNSIGNED_INT, 0);
+		
 		m_vao_face.release();
-		//vao_cube.release();
+	
+		//绘制控制网格
+		m_cn_vao_edge.bind();
+		m_program->setUniformValue("u_Color", QVector3D(1.0, 1.0, 1.0)); //曲面表面颜色
+		m_program->setUniformValue("u_AmbientLight", QVector3D(1.0f, 1.0f, 1.0f)); //环境光
+		glDrawElements(GL_LINES, cn_edge_indices.size(), GL_UNSIGNED_SHORT, 0);
+		m_cn_vao_edge.release();
 	}
 	m_program->release();
 }

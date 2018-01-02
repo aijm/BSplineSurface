@@ -6,6 +6,7 @@
 
 
 #include <vector>
+#include <iostream>
 #include <QVector3D>
 using namespace std;
 
@@ -51,6 +52,7 @@ public:
 		return *this;
 	}
 
+	//根据参数u,v计算曲面上点的坐标
 	QVector3D calPos(const float& u, const float& v)
 	{
 		vector<QVector3D> v_constant(m_nu + 1);
@@ -67,16 +69,29 @@ public:
 		int n = controlpoint.size() - 1;
 		int k = knots.size() - controlpoint.size();
 		int L = 0;
-		//计算t所处的区间[t_L,t_(L+1)]
-		for (int i = k - 1; i <= n + 1; ++i)
+		//计算t所处的区间[t_L,t_(L+1)]，t只在[ knots[k-1], knots[n+1] ]中有效
+		if (t >= knots[n + 1])
 		{
-			if (t >= knots[i] && t<knots[i + 1])
+			L = n;
+		}
+		else if (t <= knots[k - 1])
+		{
+			L = k - 1;
+		}
+		else
+		{
+			for (int i = k - 1; i <= n + 1; ++i)
 			{
-				L = i;
-				break;
+				if (t >= knots[i] && t<knots[i + 1])
+				{
+					L = i;
+					break;
+				}
 			}
 		}
-		if (L == n + 1) L = n;
+		
+		if (L >= n + 1) L = n;
+		
 
 
 		vector<QVector3D> temp(k);
@@ -103,10 +118,10 @@ public:
 		return temp[0];
 	}
 
-	//根据精度生成vbo,vao,ebo
+	//根据精度生成vbo,vao,ebo，用于绘制
 	void getbuffer_object(
 		vector<QVector3D>& vertices, vector<QVector3D>& normals,
-		vector<unsigned short>& edge_indices, vector<unsigned short>& face_indices,float step=0.1f)
+		vector<unsigned short>& edge_indices, vector<unsigned short>& face_indices,float step=0.01f)
 	{
 
 		int m = static_cast<int>((m_knots_u[m_nu + 1] - m_knots_u[m_ku - 1]) / step);
@@ -121,11 +136,13 @@ public:
 				{
 					u = m_knots_u[m_nu + 1];
 					v = m_knots_v[m_kv - 1] + j*step;
+					
 				}
 				else if (j == n)
 				{
 					u = m_knots_u[m_ku - 1] + i*step;
 					v = m_knots_v[m_nv + 1];
+					
 				}
 				else
 				{
@@ -144,8 +161,9 @@ public:
 			{
 				QVector3D vector1 = vertices[i*(n + 1) + j + 1] - vertices[i*(n + 1) + j];
 				QVector3D vector2 = vertices[i*(n + 1) + j + (n + 1)] - vertices[i*(n + 1) + j];
-
-				normals[i*(n + 1) + j] = QVector3D::crossProduct(vector2, vector1);
+				QVector3D temp_normal = QVector3D::crossProduct(vector2, vector1);
+				temp_normal.normalize();
+				normals[i*(n + 1) + j] = temp_normal;
 
 			}
 		}
@@ -165,8 +183,9 @@ public:
 				face_indices.push_back(i*(n + 1) + j);
 				face_indices.push_back(i*(n + 1) + j + 1);
 				face_indices.push_back(i*(n + 1) + j + (n + 1));
-				face_indices.push_back(i*(n + 1) + j + 1);
+				
 				face_indices.push_back(i*(n + 1) + j + (n + 1));
+                face_indices.push_back(i*(n + 1) + j + 1);
 				face_indices.push_back(i*(n + 1) + j + (n + 1) + 1);
 
 				edge_indices.push_back(i*(n + 1) + j);
@@ -189,7 +208,40 @@ public:
 		}
 	}
 	
+	//生成控制顶点的顶点及边上点的索引，用于绘制
+	void getcontrolpoint(vector<QVector3D>& vertices, vector<unsigned short>& edge_indices)
+	{
+		for (int i = 0; i <= m_nu; ++i)
+		{
+			for (int j = 0; j <= m_nv; ++j)
+			{
+				vertices.push_back(m_cnPoint[i][j]);
+			}
+		}
+		for (unsigned short i = 0; i < m_nu; ++i)
+		{
+			for (unsigned short j = 0; j < m_nv; ++j)
+			{
 
+				edge_indices.push_back(i*(m_nv + 1) + j);
+				edge_indices.push_back(i*(m_nv + 1) + j + 1);
+				edge_indices.push_back(i*(m_nv + 1) + j);
+				edge_indices.push_back(i*(m_nv + 1) + j + (m_nv + 1));
+
+			}
+		}
+
+		for (unsigned short i = 0; i < m_nu; ++i)
+		{
+			edge_indices.push_back(i*(m_nv + 1) + m_nv);
+			edge_indices.push_back((i + 1)*(m_nv + 1) + m_nv);
+		}
+		for (unsigned short j = 0; j < m_nv; ++j)
+		{
+			edge_indices.push_back(m_nu*(m_nv + 1) + j);
+			edge_indices.push_back(m_nu*(m_nv + 1) + j + 1);
+		}
+	}
 
 
 private:

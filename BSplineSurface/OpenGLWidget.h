@@ -36,16 +36,24 @@ private:
 
 	bool leftbuttonpress = false;
 	float fov = 45.0f;
-	VirtualBall vBall;
+	VirtualBall vBall;  //ÐéÄâÇò£¬ÓÃÓÚÐý×ª
 	// OpenGL State Information
 	QOpenGLBuffer* m_vbo_vertices;
 	QOpenGLBuffer* m_vbo_normals;
 	QOpenGLBuffer* m_ebo_edge;
 	QOpenGLBuffer* m_ebo_face;
+
+	QOpenGLBuffer* m_cn_vbo_vertices;
+	QOpenGLBuffer* m_cn_ebo_edge;
+
 	QOpenGLVertexArrayObject m_vao_edge;
 	QOpenGLVertexArrayObject m_vao_face;
+	QOpenGLVertexArrayObject m_cn_vao_edge;
+
+
 	QOpenGLShaderProgram *m_program;
 	
+
 
 	QOpenGLBuffer* m_cube_v;
 	QOpenGLBuffer* m_cube_n;
@@ -60,6 +68,8 @@ private:
 	vector<unsigned short> edge_indices;
 	vector<unsigned short> face_indices;
 
+	vector<QVector3D> cn_vertices;
+	vector<unsigned short> cn_edge_indices;
 	// Shader Information
 	int u_model;
 	int u_view;
