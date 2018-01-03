@@ -5,7 +5,9 @@ mainwindow::mainwindow(QWidget *parent)
 {
 	ui.setupUi(this);
 
-	myopenglwidget = new OpenGLWidget;
+	this->setCentralWidget(ui.openGLWidget);
 
-	this->setCentralWidget(myopenglwidget);
+
 }
+
+

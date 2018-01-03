@@ -8,8 +8,10 @@
 #include <QMatrix4x4>
 #include <VirtualBall.h>
 #include <BSplineSurface.h>
+#include <QTime>
 
 class QOpenGLShaderProgram;
+class QExposeEvent;
 
 class OpenGLWidget : public QOpenGLWidget,
 	protected QOpenGLFunctions
@@ -24,15 +26,24 @@ public:
 	void paintGL();
 	protected slots:
 	void teardownGL();
+	void on_showface();
+	void on_showedge();
+	void on_showcontrol();
 	//void update();
 
 protected:
-	//void exposeEvent(QExposeEvent *ev);
+	
 	void mousePressEvent(QMouseEvent*);
 	void mouseMoveEvent(QMouseEvent*);
 	void mouseReleaseEvent(QMouseEvent*);
 	void wheelEvent(QWheelEvent*);
+
 private:
+	
+	QTime lastTime;
+
+	bool showcontrol = true;
+	bool showface = true;
 
 	bool leftbuttonpress = false;
 	float fov = 45.0f;
@@ -52,13 +63,6 @@ private:
 
 
 	QOpenGLShaderProgram *m_program;
-	
-
-
-	QOpenGLBuffer* m_cube_v;
-	QOpenGLBuffer* m_cube_n;
-	QOpenGLBuffer* ebo_cube;
-	QOpenGLVertexArrayObject vao_cube;
 
 	bspSurface bspsurf;
 
@@ -80,8 +84,7 @@ private:
 	QMatrix4x4 m_view;
 	QMatrix4x4 m_normalmatrix;
 
-	// Fix for Windows
-	QRegion m_cachedRegion;
+	
 
 	// Private Helpers
 	void printVersionInformation();

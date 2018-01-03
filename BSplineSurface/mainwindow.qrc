@@ -5,5 +5,8 @@
         <file>shaders/simple.vert</file>
         <file>shaders/shader.frag</file>
         <file>shaders/shader.vert</file>
+        <file>images/controlmesh.png</file>
+        <file>images/facemode.png</file>
+        <file>images/linemode.png</file>
     </qresource>
 </RCC>

@@ -1,29 +1,163 @@
-<UI version="4.0" >
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
  <class>mainwindowClass</class>
- <widget class="QMainWindow" name="mainwindowClass" >
-  <property name="objectName" >
-   <string notr="true">mainwindowClass</string>
-  </property>
-  <property name="geometry" >
+ <widget class="QMainWindow" name="mainwindowClass">
+  <property name="geometry">
    <rect>
-	<x>0</x>
-	<y>0</y>
-	<width>600</width>
-	<height>400</height>
+    <x>0</x>
+    <y>0</y>
+    <width>600</width>
+    <height>408</height>
    </rect>
   </property>
-  <property name="windowTitle" >
+  <property name="windowTitle">
    <string>mainwindow</string>
   </property>
-  <widget class="QMenuBar" name="menuBar" />
-  <widget class="QToolBar" name="mainToolBar" />
-  <widget class="QWidget" name="centralWidget" />
-  <widget class="QStatusBar" name="statusBar" />
+  <widget class="QWidget" name="centralWidget">
+   <widget class="OpenGLWidget" name="openGLWidget">
+    <property name="geometry">
+     <rect>
+      <x>-1</x>
+      <y>-1</y>
+      <width>601</width>
+      <height>341</height>
+     </rect>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>600</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuRender">
+    <property name="title">
+     <string>Render</string>
+    </property>
+    <addaction name="actionFace"/>
+    <addaction name="actionEdge"/>
+    <addaction name="actionControl_mesh"/>
+   </widget>
+   <addaction name="menuRender"/>
+  </widget>
+  <widget class="QStatusBar" name="statusBar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionControl_mesh"/>
+   <addaction name="actionFace"/>
+   <addaction name="actionEdge"/>
+   <addaction name="separator"/>
+  </widget>
+  <action name="actionFace">
+   <property name="icon">
+    <iconset resource="mainwindow.qrc">
+     <normaloff>:/images/facemode.png</normaloff>:/images/facemode.png</iconset>
+   </property>
+   <property name="text">
+    <string>face</string>
+   </property>
+   <property name="toolTip">
+    <string>face mode</string>
+   </property>
+  </action>
+  <action name="actionEdge">
+   <property name="icon">
+    <iconset resource="mainwindow.qrc">
+     <normaloff>:/images/linemode.png</normaloff>:/images/linemode.png</iconset>
+   </property>
+   <property name="text">
+    <string>edge</string>
+   </property>
+   <property name="toolTip">
+    <string>edge mode</string>
+   </property>
+  </action>
+  <action name="actionControl_mesh">
+   <property name="icon">
+    <iconset resource="mainwindow.qrc">
+     <normaloff>:/images/controlmesh.png</normaloff>:/images/controlmesh.png</iconset>
+   </property>
+   <property name="text">
+    <string>control mesh</string>
+   </property>
+  </action>
  </widget>
- <layoutDefault spacing="6" margin="11" />
- <pixmapfunction></pixmapfunction>
+ <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>OpenGLWidget</class>
+   <extends>QOpenGLWidget</extends>
+   <header>OpenGLWidget.h</header>
+   <slots>
+    <slot>on_showface()</slot>
+    <slot>on_showedge()</slot>
+    <slot>on_showcontrol()</slot>
+   </slots>
+  </customwidget>
+ </customwidgets>
  <resources>
-   <include location="mainwindow.qrc"/>
+  <include location="mainwindow.qrc"/>
  </resources>
- <connections/>
-</UI>
+ <connections>
+  <connection>
+   <sender>actionFace</sender>
+   <signal>triggered()</signal>
+   <receiver>openGLWidget</receiver>
+   <slot>on_showface()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>226</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionEdge</sender>
+   <signal>triggered()</signal>
+   <receiver>openGLWidget</receiver>
+   <slot>on_showedge()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>226</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>actionControl_mesh</sender>
+   <signal>triggered()</signal>
+   <receiver>openGLWidget</receiver>
+   <slot>on_showcontrol()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>-1</x>
+     <y>-1</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>299</x>
+     <y>226</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

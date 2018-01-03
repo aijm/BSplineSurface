@@ -10,8 +10,9 @@ class mainwindow : public QMainWindow
 public:
 	mainwindow(QWidget *parent = Q_NULLPTR);
 
+protected:
+	
 private:
 	Ui::mainwindowClass ui;
 
-	OpenGLWidget* myopenglwidget;
 };
